@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Chromecast Video Caster - Working Version</title>
+    <title>Chromecast Video Caster - Fixed</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
@@ -38,20 +38,31 @@
             cursor: pointer; font-size: 14px; transition: all 0.3s; font-weight: 500;
         }
         .preset-btn:hover { background: #667eea; color: white; }
-        .cast-button {
-            background: #ff6b35; color: white; padding: 15px 30px; border: none; border-radius: 8px;
-            font-size: 18px; font-weight: bold; cursor: pointer; width: 100%; margin-top: 20px;
-            transition: all 0.3s;
+        
+        /* Video player styling */
+        .video-container {
+            background: #000; border-radius: 10px; margin: 20px 0; position: relative;
+            min-height: 300px; display: flex; align-items: center; justify-content: center;
         }
-        .cast-button:hover { background: #e55a2b; transform: translateY(-2px); }
-        .explanation {
+        video {
+            width: 100%; height: auto; border-radius: 10px; max-height: 400px;
+        }
+        .video-placeholder {
+            color: #888; text-align: center; padding: 40px;
+        }
+        
+        .cast-instructions {
+            background: #e3f2fd; border-radius: 8px; padding: 15px; margin: 15px 0;
+            border: 2px solid #2196f3;
+        }
+        .cast-instructions h4 { color: #1976d2; margin-bottom: 10px; }
+        
+        .chrome-flag-fix {
             background: #fff3cd; border: 1px solid #ffeaa7; border-radius: 8px;
             padding: 15px; color: #856404; margin-top: 20px; font-size: 14px;
         }
-        .status {
-            text-align: center; padding: 10px; margin-top: 15px; border-radius: 6px;
-            font-weight: 500; background: #e3f2fd; color: #1976d2;
-        }
+        .chrome-flag-fix h4 { margin-bottom: 10px; }
+        .chrome-flag-fix ol { margin-left: 20px; }
     </style>
 </head>
 <body>
@@ -59,18 +70,18 @@
         <h1>🎬 Chromecast Video Caster</h1>
         
         <div class="method">
-            <h3>📱 How to Cast (Reliable Method):</h3>
+            <h3>📱 How to Cast:</h3>
             <ol>
-                <li>Select or paste your video URL below</li>
-                <li><strong>Right-click anywhere</strong> on this page</li>
-                <li>Select <strong>"Cast..."</strong> from the context menu</li>
+                <li>Select a video URL below</li>
+                <li>Click "Load Video" to display it</li>
+                <li><strong>Right-click on the video player</strong></li>
+                <li>Select <strong>"Cast..."</strong> from the menu</li>
                 <li>Choose your Chromecast device</li>
-                <li>Video starts playing immediately!</li>
             </ol>
         </div>
 
         <div class="url-section">
-            <label><strong>Video URL:</strong></label>
+            <label><strong>Video URL (MP4, WebM, or M3U8 only):</strong></label>
             <input type="url" id="videoUrl" placeholder="https://example.com/video.mp4"
                    value="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4">
             
@@ -80,69 +91,97 @@
                 <button class="preset-btn" onclick="setUrl('https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/Sintel.mp4')">Sintel</button>
                 <button class="preset-btn" onclick="setUrl('https://test-videos.co.uk/vids/bigbuckbunny/mp4/h264/720/Big_Buck_Bunny_720_10s_1MB.mp4')">Test Video (10s)</button>
             </div>
+            
+            <button onclick="loadVideo()" style="width: 100%; padding: 12px; background: #4caf50; color: white; border: none; border-radius: 6px; font-size: 16px; margin-top: 10px;">
+                📺 Load Video for Casting
+            </button>
         </div>
 
-        <button class="cast-button" onclick="triggerCast()">
-            🎯 Right-Click Anywhere → Cast
-        </button>
-
-        <div class="status" id="status">
-            Ready to cast! Right-click anywhere on this page and select "Cast..."
+        <div class="video-container" id="videoContainer">
+            <div class="video-placeholder">
+                Click "Load Video" above to display the video player
+            </div>
         </div>
 
-        <div class="explanation">
-            <strong>Why this method works:</strong> Chrome's built-in Cast uses the same discovery system as YouTube, bypassing the Web SDK's known device detection issues. This works with any Chromecast that YouTube can find.
+        <div class="cast-instructions">
+            <h4>🎯 To Cast:</h4>
+            <p><strong>Right-click directly on the video player above</strong> and select "Cast..." from the menu. Your Chromecast should appear as available (not greyed out).</p>
+        </div>
+
+        <div class="chrome-flag-fix">
+            <h4>⚠️ If devices still show "Available for specific video sites":</h4>
+            <ol>
+                <li>Go to <code>chrome://flags/</code> in your address bar</li>
+                <li>Search for <strong>"Connect to cast devices on all IP addresses"</strong></li>
+                <li>Change from "Default" to <strong>"Enabled"</strong></li>
+                <li>Restart Chrome browser</li>
+                <li>Try casting again</li>
+            </ol>
         </div>
     </div>
 
     <script>
-        let currentVideo;
-
         function setUrl(url) {
             document.getElementById('videoUrl').value = url;
-            updateVideoSource(url);
-            document.getElementById('status').textContent = `Video ready: ${url.split('/').pop()}`;
             console.log('Video URL set:', url);
         }
 
-        function updateVideoSource(url) {
-            // Remove old video if exists
-            if (currentVideo) {
-                currentVideo.remove();
+        function loadVideo() {
+            const url = document.getElementById('videoUrl').value.trim();
+            
+            if (!url) {
+                alert('Please enter a video URL');
+                return;
             }
-            
-            // Create new video element for casting
-            currentVideo = document.createElement('video');
-            currentVideo.src = url;
-            currentVideo.controls = true;
-            currentVideo.style.display = 'none'; // Hidden but detectable by Chrome
-            currentVideo.preload = 'metadata';
-            document.body.appendChild(currentVideo);
-        }
 
-        function triggerCast() {
-            alert('Right-click anywhere on this page and select "Cast..." from the menu!\n\nChrome will show your Chromecast devices.');
-        }
-
-        // Initialize on load
-        window.addEventListener('load', function() {
-            updateVideoSource(document.getElementById('videoUrl').value);
+            // Check if URL looks like a supported format
+            const supportedFormats = ['.mp4', '.webm', '.m3u8', '.mpd'];
+            const isSupported = supportedFormats.some(format => url.toLowerCase().includes(format));
             
-            // Update when URL changes
-            document.getElementById('videoUrl').addEventListener('input', function() {
-                updateVideoSource(this.value);
-                document.getElementById('status').textContent = 'Video URL updated - Ready to cast!';
+            if (!isSupported && !url.includes('youtube') && !url.includes('vimeo')) {
+                alert('Warning: This URL may not be a supported video format (MP4, WebM, M3U8). Chromecast may not be able to cast it.');
+            }
+
+            // Create video element
+            const container = document.getElementById('videoContainer');
+            container.innerHTML = `
+                <video controls crossorigin="anonymous" id="mainVideo">
+                    <source src="${url}" type="${getVideoType(url)}">
+                    Your browser doesn't support the video tag.
+                </video>
+            `;
+
+            // Set up video element properly for casting
+            const video = document.getElementById('mainVideo');
+            video.addEventListener('loadedmetadata', function() {
+                console.log('✅ Video loaded and ready for casting');
+                console.log('Video format:', getVideoType(url));
+                console.log('Right-click on the video to cast');
             });
-            
-            console.log('✅ Page ready for casting via Chrome menu');
-        });
 
-        // Add right-click hint
-        document.addEventListener('contextmenu', function(e) {
-            // Don't prevent default - we want the context menu to show
-            setTimeout(() => {
-                document.getElementById('status').textContent = '👆 Look for "Cast..." in the menu that just appeared!';
-            }, 100);
+            video.addEventListener('error', function(e) {
+                console.error('❌ Video failed to load:', e);
+                container.innerHTML = `
+                    <div class="video-placeholder" style="color: #dc3545;">
+                        ❌ Failed to load video. Please check the URL and format.
+                        <br><small>Supported formats: MP4, WebM, M3U8, DASH</small>
+                    </div>
+                `;
+            });
+        }
+
+        function getVideoType(url) {
+            const urlLower = url.toLowerCase();
+            if (urlLower.includes('.mp4') || urlLower.includes('mp4')) return 'video/mp4';
+            if (urlLower.includes('.webm')) return 'video/webm';
+            if (urlLower.includes('.m3u8')) return 'application/x-mpegURL';
+            if (urlLower.includes('.mpd')) return 'application/dash+xml';
+            return 'video/mp4'; // Default fallback
+        }
+
+        // Auto-load first video on page load
+        window.addEventListener('load', function() {
+            loadVideo();
         });
     </script>
 </body>
