@@ -10,7 +10,6 @@
             padding: 0;
             box-sizing: border-box;
         }
-
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
@@ -20,7 +19,6 @@
             align-items: center;
             padding: 20px;
         }
-
         .container {
             background: rgba(255, 255, 255, 0.95);
             border-radius: 20px;
@@ -29,26 +27,49 @@
             max-width: 600px;
             width: 100%;
         }
-
         h1 {
             color: #333;
             margin-bottom: 30px;
             text-align: center;
             font-size: 2em;
         }
-
-        .cast-button-container {
-            display: flex;
-            justify-content: center;
+        .cast-section {
+            text-align: center;
             margin-bottom: 30px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 10px;
         }
-
+        .cast-button-container {
+            display: inline-flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
         google-cast-launcher {
             width: 30px;
             height: 30px;
             cursor: pointer;
+            --connected-color: #1976d2;
+            --disconnected-color: #666;
         }
-
+        .cast-label {
+            font-size: 16px;
+            color: #333;
+            font-weight: 500;
+        }
+        .manual-connect {
+            margin-top: 10px;
+        }
+        .manual-connect button {
+            background: #4285f4;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+        }
         .status {
             background: #f7f9fc;
             border-radius: 10px;
@@ -58,28 +79,27 @@
             font-weight: 500;
             transition: all 0.3s ease;
         }
-
         .status.connected {
             background: #d4edda;
             color: #155724;
         }
-
         .status.disconnected {
+            background: #fff3cd;
+            color: #856404;
+        }
+        .status.error {
             background: #f8d7da;
             color: #721c24;
         }
-
         .input-group {
             margin-bottom: 20px;
         }
-
         label {
             display: block;
             margin-bottom: 8px;
             color: #555;
             font-weight: 500;
         }
-
         input[type="url"] {
             width: 100%;
             padding: 12px;
@@ -88,19 +108,16 @@
             font-size: 16px;
             transition: border-color 0.3s ease;
         }
-
         input[type="url"]:focus {
             outline: none;
             border-color: #667eea;
         }
-
         .preset-videos {
             display: flex;
             gap: 10px;
             margin-bottom: 20px;
             flex-wrap: wrap;
         }
-
         .preset-btn {
             padding: 8px 12px;
             background: #f0f0f0;
@@ -110,19 +127,16 @@
             font-size: 14px;
             transition: all 0.3s ease;
         }
-
         .preset-btn:hover {
             background: #667eea;
             color: white;
         }
-
         .controls {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
             gap: 10px;
             margin-bottom: 20px;
         }
-
         button {
             padding: 12px 20px;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
@@ -134,34 +148,29 @@
             cursor: pointer;
             transition: transform 0.2s ease, box-shadow 0.2s ease;
         }
-
         button:hover:not(:disabled) {
             transform: translateY(-2px);
             box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
         }
-
         button:disabled {
             opacity: 0.5;
             cursor: not-allowed;
+            background: #ccc;
         }
-
         .media-info {
             background: #f7f9fc;
             border-radius: 10px;
             padding: 15px;
             margin-top: 20px;
         }
-
         .media-info h3 {
             color: #333;
             margin-bottom: 10px;
             font-size: 1.2em;
         }
-
         .progress-container {
             margin: 15px 0;
         }
-
         .progress-bar {
             width: 100%;
             height: 6px;
@@ -170,14 +179,12 @@
             overflow: hidden;
             cursor: pointer;
         }
-
         .progress {
             height: 100%;
             background: linear-gradient(90deg, #667eea, #764ba2);
             border-radius: 3px;
             transition: width 0.3s ease;
         }
-
         .time-display {
             display: flex;
             justify-content: space-between;
@@ -185,39 +192,22 @@
             font-size: 14px;
             color: #666;
         }
-
         .volume-control {
             margin-top: 15px;
         }
-
         .volume-slider {
             width: 100%;
             margin-top: 10px;
         }
-
-        .error-message {
-            background: #f8d7da;
-            color: #721c24;
-            padding: 12px;
-            border-radius: 8px;
-            margin-top: 10px;
-            display: none;
-        }
-
-        .loading {
-            display: inline-block;
-            width: 20px;
-            height: 20px;
-            border: 3px solid #f3f3f3;
-            border-top: 3px solid #667eea;
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-            margin-left: 10px;
-        }
-
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
+        .debug-info {
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 6px;
+            padding: 10px;
+            margin-bottom: 20px;
+            font-family: monospace;
+            font-size: 12px;
+            color: #6c757d;
         }
     </style>
 </head>
@@ -225,14 +215,24 @@
     <div class="container">
         <h1>🎬 Chromecast Video Caster</h1>
         
-        <div class="cast-button-container">
-            <google-cast-launcher id="castbutton"></google-cast-launcher>
+        <div class="cast-section">
+            <div class="cast-button-container">
+                <google-cast-launcher id="castbutton"></google-cast-launcher>
+                <span class="cast-label">Cast to Device</span>
+            </div>
+            <div class="manual-connect">
+                <button onclick="manualRequestSession()">🔍 Search for Devices</button>
+            </div>
         </div>
 
         <div class="status disconnected" id="status">
-            No Chromecast connected
+            Initializing Cast API...
         </div>
 
+        <div class="debug-info" id="debugInfo">
+            Cast Status: Loading...
+        </div>
+        
         <div class="input-group">
             <label for="videoUrl">Video URL:</label>
             <input type="url" id="videoUrl" placeholder="Enter video URL (MP4, WebM, etc.)" 
@@ -243,7 +243,6 @@
             <button class="preset-btn" onclick="loadPreset('https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4')">Big Buck Bunny</button>
             <button class="preset-btn" onclick="loadPreset('https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4')">Elephants Dream</button>
             <button class="preset-btn" onclick="loadPreset('https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/Sintel.mp4')">Sintel</button>
-            <button class="preset-btn" onclick="loadPreset('https://test-videos.co.uk/vids/bigbuckbunny/mp4/h264/720/Big_Buck_Bunny_720_10s_1MB.mp4')">Test Video (10s)</button>
         </div>
 
         <div class="controls">
@@ -273,77 +272,169 @@
                        min="0" max="100" value="100" onchange="setVolume(this.value)">
             </div>
         </div>
-
-        <div class="error-message" id="errorMessage"></div>
     </div>
 
     <script src="https://www.gstatic.com/cv/js/sender/v1/cast_sender.js?loadCastFramework=1"></script>
+    
     <script>
-        let cast, castContext, castSession, currentMedia;
-        let progressTimer;
+        let castContext, castSession, currentMedia, progressTimer;
+        let isInitialized = false;
 
-        // Initialize on window load
+        // Debug function
+        function updateDebugInfo(message) {
+            const debugEl = document.getElementById('debugInfo');
+            const timestamp = new Date().toLocaleTimeString();
+            debugEl.textContent = `[${timestamp}] ${message}`;
+            console.log(`Cast Debug: ${message}`);
+        }
+
+        // Cast API availability callback - this is critical!
         window['__onGCastApiAvailable'] = function(isAvailable) {
+            updateDebugInfo(`Cast API Available: ${isAvailable}`);
+            
             if (isAvailable) {
-                initializeCastApi();
+                // Wait for DOM to be fully ready
+                if (document.readyState === 'loading') {
+                    document.addEventListener('DOMContentLoaded', initializeCastApi);
+                } else {
+                    // DOM already loaded, initialize immediately
+                    setTimeout(initializeCastApi, 500); // Small delay to ensure everything is ready
+                }
+            } else {
+                updateStatus('Cast API not available - Use Chrome browser', false, 'error');
+                updateDebugInfo('ERROR: Cast API not available');
             }
         };
 
         function initializeCastApi() {
-            cast = window.cast;
-            chrome.cast = window.chrome.cast;
-            
-            cast.framework.CastContext.getInstance().setOptions({
-                receiverApplicationId: chrome.cast.media.DEFAULT_MEDIA_RECEIVER_APP_ID,
-                autoJoinPolicy: chrome.cast.AutoJoinPolicy.ORIGIN_SCOPED,
-                language: 'en-US',
-                resumeSavedSession: true
-            });
+            if (isInitialized) {
+                updateDebugInfo('Already initialized, skipping...');
+                return;
+            }
 
-            castContext = cast.framework.CastContext.getInstance();
-            
-            // Set up event listeners
-            castContext.addEventListener(
-                cast.framework.CastContextEventType.SESSION_STATE_CHANGED,
-                onSessionStateChanged
-            );
+            try {
+                updateDebugInfo('Starting Cast initialization...');
+                
+                // Get Cast context
+                castContext = cast.framework.CastContext.getInstance();
+                
+                // Set options
+                const options = {
+                    receiverApplicationId: chrome.cast.media.DEFAULT_MEDIA_RECEIVER_APP_ID,
+                    autoJoinPolicy: chrome.cast.AutoJoinPolicy.ORIGIN_SCOPED
+                };
+                
+                castContext.setOptions(options);
+                updateDebugInfo('Cast options set');
+                
+                // Add event listeners
+                castContext.addEventListener(
+                    cast.framework.CastContextEventType.SESSION_STATE_CHANGED,
+                    onSessionStateChanged
+                );
 
-            castContext.addEventListener(
-                cast.framework.CastContextEventType.CAST_STATE_CHANGED,
-                onCastStateChanged
-            );
+                castContext.addEventListener(
+                    cast.framework.CastContextEventType.CAST_STATE_CHANGED, 
+                    onCastStateChanged
+                );
+                
+                updateDebugInfo('Event listeners added');
+                
+                // Check initial state
+                const initialState = castContext.getCastState();
+                updateDebugInfo(`Initial Cast State: ${initialState}`);
+                onCastStateChanged({ castState: initialState });
+                
+                isInitialized = true;
+                updateDebugInfo('✅ Cast API initialized successfully!');
+                updateStatus('Ready to cast - Click the Cast button above', false, 'disconnected');
+                
+            } catch (error) {
+                updateDebugInfo(`❌ Initialization failed: ${error.message}`);
+                updateStatus('Cast initialization failed', false, 'error');
+                console.error('Cast init error:', error);
+            }
+        }
+
+        function manualRequestSession() {
+            updateDebugInfo('Manual session request triggered');
+            
+            if (!castContext) {
+                updateDebugInfo('❌ Cast context not available');
+                alert('Cast not initialized. Please refresh the page.');
+                return;
+            }
+
+            updateDebugInfo('Requesting cast session...');
+            
+            castContext.requestSession()
+                .then(() => {
+                    updateDebugInfo('✅ Session request successful');
+                })
+                .catch((error) => {
+                    if (error === 'cancel') {
+                        updateDebugInfo('User cancelled device selection');
+                    } else {
+                        updateDebugInfo(`❌ Session request failed: ${error}`);
+                    }
+                });
         }
 
         function onSessionStateChanged(event) {
+            updateDebugInfo(`Session State: ${event.sessionState}`);
+            
             switch (event.sessionState) {
                 case cast.framework.SessionState.SESSION_STARTED:
                 case cast.framework.SessionState.SESSION_RESUMED:
                     castSession = castContext.getCurrentSession();
-                    updateStatus('Connected to ' + castSession.getCastDevice().friendlyName, true);
+                    const device = castSession.getCastDevice();
+                    updateStatus(`Connected to ${device.friendlyName}`, true, 'connected');
+                    updateDebugInfo(`✅ Connected to: ${device.friendlyName}`);
                     enableControls(true);
                     break;
+                    
                 case cast.framework.SessionState.SESSION_ENDED:
-                    updateStatus('Session ended', false);
+                    updateDebugInfo('Session ended');
+                    updateStatus('Disconnected from Chromecast', false, 'disconnected');
                     enableControls(false);
                     stopProgressTimer();
                     hideMediaInfo();
+                    castSession = null;
                     break;
+                    
                 case cast.framework.SessionState.SESSION_ENDING:
-                    updateStatus('Disconnecting...', false);
+                    updateDebugInfo('Session ending...');
+                    updateStatus('Disconnecting...', false, 'disconnected');
                     break;
             }
         }
 
         function onCastStateChanged(event) {
-            if (event.castState === cast.framework.CastState.CONNECTED) {
-                castSession = castContext.getCurrentSession();
+            updateDebugInfo(`Cast State Changed: ${event.castState}`);
+            
+            switch (event.castState) {
+                case cast.framework.CastState.NO_DEVICES_AVAILABLE:
+                    updateStatus('No Chromecast devices found', false, 'error');
+                    updateDebugInfo('❌ No devices available on network');
+                    break;
+                case cast.framework.CastState.NOT_CONNECTED:
+                    updateStatus('Ready to connect', false, 'disconnected');
+                    updateDebugInfo('Ready to connect to devices');
+                    break;
+                case cast.framework.CastState.CONNECTING:
+                    updateStatus('Connecting to device...', false, 'disconnected');
+                    updateDebugInfo('Connecting to Cast device...');
+                    break;
+                case cast.framework.CastState.CONNECTED:
+                    updateDebugInfo('Cast state: CONNECTED');
+                    break;
             }
         }
 
-        function updateStatus(message, connected) {
+        function updateStatus(message, connected, statusClass) {
             const statusEl = document.getElementById('status');
             statusEl.textContent = message;
-            statusEl.className = 'status ' + (connected ? 'connected' : 'disconnected');
+            statusEl.className = 'status ' + (statusClass || (connected ? 'connected' : 'disconnected'));
         }
 
         function enableControls(enable) {
@@ -355,20 +446,23 @@
 
         function loadPreset(url) {
             document.getElementById('videoUrl').value = url;
+            updateDebugInfo(`Preset loaded: ${url.split('/').pop()}`);
         }
 
         function loadMedia() {
             const videoUrl = document.getElementById('videoUrl').value.trim();
             
             if (!videoUrl) {
-                showError('Please enter a video URL');
+                alert('Please enter a video URL');
                 return;
             }
 
             if (!castSession) {
-                showError('No Chromecast session active');
+                alert('No active Cast session');
                 return;
             }
+
+            updateDebugInfo(`Loading media: ${videoUrl}`);
 
             const mediaInfo = new chrome.cast.media.MediaInfo(videoUrl, 'video/mp4');
             mediaInfo.metadata = new chrome.cast.media.GenericMediaMetadata();
@@ -378,36 +472,37 @@
             const request = new chrome.cast.media.LoadRequest(mediaInfo);
             request.autoplay = true;
             
-            castSession.loadMedia(request).then(
-                function() {
-                    console.log('Media loaded successfully');
+            castSession.loadMedia(request)
+                .then(() => {
+                    updateDebugInfo('✅ Media loaded successfully');
                     currentMedia = castSession.getMediaSession();
                     showMediaInfo();
                     startProgressTimer();
-                    hideError();
-                },
-                function(error) {
-                    console.error('Error loading media', error);
-                    showError('Failed to load media: ' + error);
-                }
-            );
+                })
+                .catch((error) => {
+                    updateDebugInfo(`❌ Media load failed: ${error}`);
+                    alert('Failed to load media: ' + error);
+                });
         }
 
         function playMedia() {
             if (currentMedia) {
                 currentMedia.play(new chrome.cast.media.PlayRequest());
+                updateDebugInfo('▶️ Play command sent');
             }
         }
 
         function pauseMedia() {
             if (currentMedia) {
                 currentMedia.pause(new chrome.cast.media.PauseRequest());
+                updateDebugInfo('⏸️ Pause command sent');
             }
         }
 
         function stopMedia() {
             if (currentMedia) {
                 currentMedia.stop(new chrome.cast.media.StopRequest());
+                updateDebugInfo('⏹️ Stop command sent');
                 hideMediaInfo();
                 stopProgressTimer();
             }
@@ -417,6 +512,7 @@
             if (castSession) {
                 castSession.setVolume(level / 100);
                 document.getElementById('volumeValue').textContent = level;
+                updateDebugInfo(`🔊 Volume set to ${level}%`);
             }
         }
 
@@ -433,6 +529,7 @@
                 const request = new chrome.cast.media.SeekRequest();
                 request.currentTime = seekTime;
                 currentMedia.seek(request);
+                updateDebugInfo(`⏭️ Seeking to ${formatTime(seekTime)}`);
             }
         }
 
@@ -480,15 +577,10 @@
             return mins + ':' + (secs < 10 ? '0' : '') + secs;
         }
 
-        function showError(message) {
-            const errorEl = document.getElementById('errorMessage');
-            errorEl.textContent = message;
-            errorEl.style.display = 'block';
-        }
-
-        function hideError() {
-            document.getElementById('errorMessage').style.display = 'none';
-        }
+        // Page ready check
+        document.addEventListener('DOMContentLoaded', function() {
+            updateDebugInfo('DOM Content Loaded');
+        });
     </script>
 </body>
 </html>
