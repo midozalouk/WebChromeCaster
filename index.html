@@ -1,108 +1,237 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Simple Chromecast Caster</title>
-    <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body {
-            font-family: system-ui, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh; display: flex; justify-content: center; align-items: center; padding: 20px;
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Chromecast Video Caster</title>
+  <style>
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body { font-family: -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;
+           background: linear-gradient(135deg,#667eea 0%,#764ba2 100%); min-height:100vh;
+           display:flex; justify-content:center; align-items:center; padding:20px; }
+    .container { background:rgba(255,255,255,.95); border-radius:20px; box-shadow:0 20px 60px rgba(0,0,0,.3);
+                 padding:40px; max-width:720px; width:100%; }
+    h1 { color:#333; margin-bottom:24px; text-align:center; }
+    .cast-section { background:#f8f9fa; border-radius:10px; padding:16px; margin-bottom:16px; text-align:center; }
+    .cast-button-container { display:inline-flex; align-items:center; gap:12px; padding:10px 16px;
+                             background:#fff; border-radius:8px; box-shadow:0 2px 8px rgba(0,0,0,.08); }
+    google-cast-launcher { width:28px; height:28px; cursor:pointer;
+                           --connected-color:#1a73e8; --disconnected-color:#666; }
+    .manual-connect button { margin-top:10px; background:#4285f4; color:#fff; border:none; border-radius:6px;
+                             padding:8px 14px; cursor:pointer; }
+    .status { background:#f7f9fc; border-radius:10px; padding:12px; margin:12px 0; font-weight:500; text-align:center; }
+    .status.connected { background:#d4edda; color:#155724; }
+    .status.disconnected { background:#fff3cd; color:#856404; }
+    .status.error { background:#f8d7da; color:#721c24; }
+    .debug-panel { background:#f8f9fa; border:1px solid #e9ecef; border-radius:8px; padding:12px; margin:12px 0; }
+    .debug-log { background:#fff; border-radius:6px; padding:8px; max-height:160px; overflow:auto; font:12px/1.5 monospace; }
+    .log-entry { border-bottom:1px solid #f0f0f0; padding:2px 0; }
+    .log-time { color:#999; margin-right:8px; }
+    .log-success { color:#28a745; }
+    .log-error { color:#dc3545; }
+    .log-info { color:#17a2b8; }
+    .input-group { margin-top:12px; }
+    input[type="url"] { width:100%; padding:12px; border:2px solid #e0e0e0; border-radius:8px; font-size:16px; }
+    .controls { display:grid; grid-template-columns:repeat(auto-fit,minmax(110px,1fr)); gap:10px; margin-top:12px; }
+    button { padding:12px 16px; background:linear-gradient(135deg,#667eea 0%,#764ba2 100%); color:#fff;
+             border:none; border-radius:8px; cursor:pointer; }
+    button:disabled { opacity:.5; cursor:not-allowed; }
+    .media-info { background:#f7f9fc; border-radius:10px; padding:12px; margin-top:12px; display:none; }
+    .progress-bar { width:100%; height:6px; background:#e0e0e0; border-radius:3px; overflow:hidden; cursor:pointer; }
+    .progress { height:100%; background:linear-gradient(90deg,#667eea,#764ba2); width:0%; }
+    .time-display { display:flex; justify-content:space-between; margin-top:6px; font-size:13px; color:#666; }
+  </style>
+
+  <!-- Define the required Cast availability hook BEFORE loading the SDK -->
+  <script>
+    let castContext, castSession, currentMedia, progressTimer, initialized = false;
+
+    function log(msg, type='info') {
+      const logEl = document.getElementById('debugLog');
+      const time = new Date().toLocaleTimeString();
+      const div = document.createElement('div');
+      div.className = 'log-entry';
+      div.innerHTML = `<span class="log-time">[${time}]</span> <span class="log-${type}">${msg}</span>`;
+      if (logEl) { logEl.appendChild(div); logEl.scrollTop = logEl.scrollHeight; }
+      console.log('[Cast]', msg);
+    }
+
+    function setStatus(text, cls='disconnected') {
+      const el = document.getElementById('status');
+      if (!el) return;
+      el.textContent = text;
+      el.className = `status ${cls}`;
+    }
+
+    window.__onGCastApiAvailable = function(isAvailable) {
+      log(`Cast API Available: ${isAvailable}`, isAvailable ? 'success' : 'error');
+      if (!isAvailable) { setStatus('Cast API not available', 'error'); return; }
+      const start = () => setTimeout(initCast, 200);
+      if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start); else start();
+    };
+
+    function initCast() {
+      if (initialized) { log('Already initialized'); return; }
+      try {
+        castContext = cast.framework.CastContext.getInstance();
+        castContext.setOptions({
+          receiverApplicationId: chrome.cast.media.DEFAULT_MEDIA_RECEIVER_APP_ID,
+          autoJoinPolicy: chrome.cast.AutoJoinPolicy.ORIGIN_SCOPED
+        });
+        castContext.addEventListener(cast.framework.CastContextEventType.SESSION_STATE_CHANGED, onSessionState);
+        castContext.addEventListener(cast.framework.CastContextEventType.CAST_STATE_CHANGED, onCastState);
+        initialized = true;
+        log('Cast options configured', 'success');
+        // Force a first state check a moment later
+        setTimeout(() => {
+          const s = castContext.getCastState();
+          log(`Cast state (forced check): ${s}`);
+          onCastState({ castState: s });
+        }, 600);
+      } catch (e) {
+        log('Init error: ' + e.message, 'error');
+        setStatus('Cast initialization failed', 'error');
+      }
+    }
+
+    function onCastState(e) {
+      const s = e.castState;
+      log(`Cast state: ${s}`);
+      if (s === cast.framework.CastState.NO_DEVICES_AVAILABLE) {
+        setStatus('No Chromecast devices available', 'error');
+      } else if (s === cast.framework.CastState.NOT_CONNECTED) {
+        setStatus('Ready to connect');
+      } else if (s === cast.framework.CastState.CONNECTING) {
+        setStatus('Connecting…');
+      }
+    }
+
+    function onSessionState(e) {
+      log(`Session state: ${e.sessionState}`);
+      switch (e.sessionState) {
+        case cast.framework.SessionState.SESSION_STARTED:
+        case cast.framework.SessionState.SESSION_RESUMED: {
+          castSession = castContext.getCurrentSession();
+          const dev = castSession.getCastDevice();
+          setStatus(`Connected to ${dev.friendlyName}`, 'connected');
+          document.getElementById('castBtn').disabled = false;
+          document.getElementById('playBtn').disabled = false;
+          document.getElementById('pauseBtn').disabled = false;
+          document.getElementById('stopBtn').disabled = false;
+          break;
         }
-        .container {
-            background: white; border-radius: 15px; padding: 30px; max-width: 500px; width: 100%;
-            box-shadow: 0 15px 40px rgba(0,0,0,0.2);
+        case cast.framework.SessionState.SESSION_ENDED: {
+          setStatus('Disconnected');
+          document.getElementById('castBtn').disabled = true;
+          document.getElementById('playBtn').disabled = true;
+          document.getElementById('pauseBtn').disabled = true;
+          document.getElementById('stopBtn').disabled = true;
+          currentMedia = null;
+          break;
         }
-        h1 { text-align: center; color: #333; margin-bottom: 30px; }
-        .cast-info {
-            background: #e3f2fd; padding: 20px; border-radius: 10px; margin-bottom: 20px;
-        }
-        .cast-info h3 { color: #1976d2; margin-bottom: 10px; }
-        .cast-info ol { margin-left: 20px; color: #555; }
-        .cast-info li { margin: 8px 0; }
-        .url-input {
-            width: 100%; padding: 12px; border: 2px solid #ddd; border-radius: 8px;
-            font-size: 16px; margin-bottom: 20px;
-        }
-        .url-input:focus { outline: none; border-color: #667eea; }
-        .presets {
-            display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 30px;
-        }
-        .preset-btn {
-            padding: 10px; background: #f5f5f5; border: none; border-radius: 6px;
-            cursor: pointer; font-size: 14px; transition: all 0.3s;
-        }
-        .preset-btn:hover { background: #667eea; color: white; }
-        .instructions {
-            background: #fff3cd; border: 1px solid #ffeaa7; border-radius: 8px;
-            padding: 15px; color: #856404;
-        }
-        .instructions h4 { margin-bottom: 10px; }
-        .note { font-size: 14px; color: #666; text-align: center; margin-top: 15px; }
-    </style>
+      }
+    }
+
+    async function requestCastSession() {
+      log('Manual session request…');
+      if (!castContext) { log('Cast context not ready', 'error'); return; }
+      try {
+        await castContext.requestSession();
+        log('Session request successful', 'success');
+      } catch (err) {
+        log('Session request failed: ' + err, 'error');
+      }
+    }
+
+    function loadPreset(u) {
+      document.getElementById('videoUrl').value = u;
+      log('Preset: ' + u.split('/').pop());
+    }
+
+    async function loadMedia() {
+      const url = document.getElementById('videoUrl').value.trim();
+      if (!url) { alert('Enter a video URL'); return; }
+      if (!castSession) { alert('No active Cast session'); return; }
+      const mediaInfo = new chrome.cast.media.MediaInfo(url, guessType(url));
+      mediaInfo.metadata = new chrome.cast.media.GenericMediaMetadata();
+      mediaInfo.metadata.title = url.split('/').pop();
+      const req = new chrome.cast.media.LoadRequest(mediaInfo);
+      req.autoplay = true;
+      try {
+        await castSession.loadMedia(req);
+        currentMedia = castSession.getMediaSession();
+        document.getElementById('mediaInfo').style.display = 'block';
+        log('Media loaded', 'success');
+      } catch (e) {
+        log('Load failed: ' + e, 'error');
+        alert('Failed to load media: ' + e);
+      }
+    }
+
+    function guessType(u) {
+      const x = u.toLowerCase();
+      if (x.endsWith('.mp4')) return 'video/mp4';
+      if (x.endsWith('.m3u8')) return 'application/x-mpegURL';
+      if (x.endsWith('.mpd')) return 'application/dash+xml';
+      if (x.endsWith('.webm')) return 'video/webm';
+      return 'video/mp4';
+    }
+
+    function playMedia() { if (currentMedia) currentMedia.play(new chrome.cast.media.PlayRequest()); }
+    function pauseMedia() { if (currentMedia) currentMedia.pause(new chrome.cast.media.PauseRequest()); }
+    function stopMedia()  { if (currentMedia) currentMedia.stop(new chrome.cast.media.StopRequest()); }
+
+    document.addEventListener('DOMContentLoaded', () => log('DOM ready'));
+  </script>
 </head>
 <body>
-    <div class="container">
-        <h1>🎬 Chromecast Video Caster</h1>
-        
-        <div class="cast-info">
-            <h3>📱 How to Cast (Workaround Method):</h3>
-            <ol>
-                <li>Copy your video URL below</li>
-                <li>Right-click anywhere on this page</li>
-                <li>Select <strong>"Cast..."</strong> from the menu</li>
-                <li>Choose your Chromecast device</li>
-                <li>Your video will start playing!</li>
-            </ol>
-        </div>
+  <div class="container">
+    <h1>🎬 Chromecast Video Caster</h1>
 
-        <input type="url" class="url-input" id="videoUrl" placeholder="Paste your video URL here"
-               value="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4">
-
-        <div class="presets">
-            <button class="preset-btn" onclick="setUrl('https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4')">Big Buck Bunny</button>
-            <button class="preset-btn" onclick="setUrl('https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4')">Elephants Dream</button>
-            <button class="preset-btn" onclick="setUrl('https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/Sintel.mp4')">Sintel</button>
-            <button class="preset-btn" onclick="setUrl('https://test-videos.co.uk/vids/bigbuckbunny/mp4/h264/720/Big_Buck_Bunny_720_10s_1MB.mp4')">Test Video</button>
-        </div>
-
-        <div class="instructions">
-            <h4>⚠️ Why This Method Works:</h4>
-            <p>The Chrome Cast Web SDK has known discovery issues that affect many developers. This workaround uses Chrome's built-in Cast functionality, which works reliably with the same devices that work with YouTube.</p>
-        </div>
-
-        <div class="note">
-            This page automatically becomes castable when you right-click → Cast
-        </div>
+    <div class="cast-section">
+      <div class="cast-button-container">
+        <google-cast-launcher></google-cast-launcher>
+        <span>Click to show Chromecast devices</span>
+      </div>
+      <div class="manual-connect">
+        <button onclick="requestCastSession()">🔍 Manually Search for Devices</button>
+      </div>
     </div>
 
-    <script>
-        function setUrl(url) {
-            document.getElementById('videoUrl').value = url;
-            console.log('Video URL set:', url);
-        }
+    <div id="status" class="status">Initializing…</div>
 
-        // Make the page cast-friendly by setting up media elements
-        window.addEventListener('load', function() {
-            const videoUrl = document.getElementById('videoUrl').value;
-            
-            // Create a hidden video element that Chrome can detect for casting
-            const video = document.createElement('video');
-            video.style.display = 'none';
-            video.src = videoUrl;
-            video.controls = true;
-            document.body.appendChild(video);
-            
-            // Update video source when URL changes
-            document.getElementById('videoUrl').addEventListener('input', function() {
-                video.src = this.value;
-                console.log('Video source updated:', this.value);
-            });
-            
-            console.log('Page is now cast-ready. Right-click and select "Cast..." to connect to your Chromecast.');
-        });
-    </script>
+    <div class="debug-panel">
+      <div class="debug-log" id="debugLog">
+        <div class="log-entry"><span class="log-time">[00:00]</span> <span class="log-info">Initializing Cast API…</span></div>
+      </div>
+    </div>
+
+    <div class="input-group">
+      <label for="videoUrl">Video URL</label>
+      <input id="videoUrl" type="url" placeholder="https://example.com/video.mp4"
+             value="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4" />
+    </div>
+
+    <div class="controls">
+      <button id="castBtn" onclick="loadMedia()" disabled>Cast Video</button>
+      <button id="playBtn" onclick="playMedia()" disabled>Play</button>
+      <button id="pauseBtn" onclick="pauseMedia()" disabled>Pause</button>
+      <button id="stopBtn" onclick="stopMedia()" disabled>Stop</button>
+    </div>
+
+    <div class="media-info" id="mediaInfo">
+      <h3>Now Playing</h3>
+      <div class="progress-bar" onclick="/* optional: add seek */">
+        <div class="progress" id="progress"></div>
+      </div>
+      <div class="time-display">
+        <span id="currentTime">0:00</span>
+        <span id="duration">0:00</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Load the Cast Web Sender SDK after defining __onGCastApiAvailable -->
+  <script src="https://www.gstatic.com/cv/js/sender/v1/cast_sender.js?loadCastFramework=1"></script>
 </body>
 </html>
