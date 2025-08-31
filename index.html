@@ -779,5 +779,34 @@
             }
         });
     </script>
+    // Add this to your existing code
+function detectPlatformIssue() {
+    const isWindows = navigator.platform.indexOf('Win') > -1;
+    const isAndroid = navigator.userAgent.indexOf('Android') > -1;
+    
+    if (isWindows && castContext.getCastState() === cast.framework.CastState.NO_DEVICES_AVAILABLE) {
+        debugLog('Windows detected - showing additional troubleshooting', 'info');
+        
+        // Show Windows-specific help
+        const helpDiv = document.createElement('div');
+        helpDiv.innerHTML = `
+            <div style="background: #fff3cd; border: 1px solid #ffeaa7; border-radius: 8px; padding: 15px; margin: 15px 0;">
+                <h4 style="color: #856404; margin-bottom: 10px;">📟 Windows 11 Cast Discovery Fix:</h4>
+                <ol style="margin-left: 20px; color: #856404;">
+                    <li>Go to <code>chrome://flags/</code></li>
+                    <li>Search: "Connect to cast devices on all IP addresses"</li>
+                    <li>Change to <strong>Enabled</strong></li>
+                    <li>Restart Chrome</li>
+                    <li>Check Windows Privacy Settings > Local network permissions</li>
+                </ol>
+            </div>
+        `;
+        document.querySelector('.troubleshooting').appendChild(helpDiv);
+    }
+}
+
+// Call this after Cast state changes
+setTimeout(detectPlatformIssue, 2000);
+
 </body>
 </html>
