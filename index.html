@@ -390,24 +390,8 @@
     </div>
 
     <script>
-        // Define the callback BEFORE loading the SDK script
-        window['__onGCastApiAvailable'] = function(isAvailable) {
-            if (isAvailable) {
-                debugLog('Cast API is available', 'success');
-                initializeCastApi();
-            } else {
-                debugLog('Cast API is not available', 'error');
-                updateStatus('Cast API not available - Please use Chrome browser', false, 'error');
-            }
-        };
-    </script>
-
-    <script src="https://www.gstatic.com/cv/js/sender/v1/cast_sender.js?loadCastFramework=1"></script>
-
-    <script>
-        let cast, castContext, castSession, currentMedia;
-        let progressTimer;
-        let initTime = Date.now();
+        let castContext, castSession, currentMedia, progressTimer;
+        let discoveryTimer;
 
         // Debug logging function
         function debugLog(message, type = 'info') {
@@ -421,25 +405,41 @@
             console.log(`[Cast Debug] ${message}`);
         }
 
+        // CRITICAL: Define callback BEFORE loading Cast SDK
+        window['__onGCastApiAvailable'] = function(isAvailable) {
+            debugLog(`Cast API Available: ${isAvailable}`, isAvailable ? 'success' : 'error');
+            
+            if (isAvailable) {
+                // Wait for DOM to be ready and give Cast framework time to initialize
+                if (document.readyState === 'loading') {
+                    document.addEventListener('DOMContentLoaded', () => {
+                        setTimeout(initializeCastApi, 1000); // 1 second delay
+                    });
+                } else {
+                    setTimeout(initializeCastApi, 1000); // 1 second delay
+                }
+            } else {
+                updateStatus('Cast API not available - Use Chrome browser', false, 'error');
+            }
+        };
+
         function initializeCastApi() {
             try {
-                cast = window.cast;
-                chrome.cast = window.chrome.cast;
+                debugLog('🔧 Initializing Cast framework...', 'info');
                 
-                debugLog('Setting up Cast options...', 'info');
-                
-                const castOptions = {
-                    receiverApplicationId: chrome.cast.media.DEFAULT_MEDIA_RECEIVER_APP_ID,
-                    autoJoinPolicy: chrome.cast.AutoJoinPolicy.ORIGIN_SCOPED,
-                    language: 'en-US',
-                    resumeSavedSession: true
-                };
-                
-                cast.framework.CastContext.getInstance().setOptions(castOptions);
-                
+                // Get Cast context
                 castContext = cast.framework.CastContext.getInstance();
                 
-                // Set up event listeners
+                // Set options
+                const options = {
+                    receiverApplicationId: chrome.cast.media.DEFAULT_MEDIA_RECEIVER_APP_ID,
+                    autoJoinPolicy: chrome.cast.AutoJoinPolicy.ORIGIN_SCOPED
+                };
+                
+                castContext.setOptions(options);
+                debugLog('✅ Cast options configured', 'success');
+                
+                // Add event listeners
                 castContext.addEventListener(
                     cast.framework.CastContextEventType.SESSION_STATE_CHANGED,
                     onSessionStateChanged
@@ -450,154 +450,195 @@
                     onCastStateChanged
                 );
                 
-                debugLog('Cast API initialized successfully', 'success');
-                debugLog('Ready to connect - Click the Cast button above', 'info');
+                debugLog('✅ Event listeners added', 'success');
                 
-                // Highlight the cast button
-                document.getElementById('castButtonContainer').classList.add('highlight');
-                setTimeout(() => {
-                    document.getElementById('castButtonContainer').classList.remove('highlight');
-                }, 5000);
+                // Start device discovery with monitoring
+                startDeviceDiscovery();
                 
-                // Check current cast state
-                const castState = castContext.getCastState();
-                debugLog(`Current cast state: ${castState}`, 'info');
+                debugLog('🚀 Cast API fully initialized!', 'success');
+                
+                // Highlight cast button
+                const castContainer = document.getElementById('castButtonContainer');
+                if (castContainer) {
+                    castContainer.classList.add('highlight');
+                    setTimeout(() => castContainer.classList.remove('highlight'), 5000);
+                }
                 
             } catch (error) {
-                debugLog('Error initializing Cast API: ' + error.message, 'error');
-                console.error('Cast initialization error:', error);
+                debugLog(`❌ Initialization failed: ${error.message}`, 'error');
+                updateStatus('Cast initialization failed', false, 'error');
             }
+        }
+
+        function startDeviceDiscovery() {
+            debugLog('🔍 Starting device discovery...', 'info');
+            
+            // Check cast state every 2 seconds for 30 seconds
+            let attempts = 0;
+            const maxAttempts = 15; // 30 seconds total
+            
+            discoveryTimer = setInterval(() => {
+                attempts++;
+                const castState = castContext.getCastState();
+                debugLog(`Discovery attempt ${attempts}: ${castState}`, 'info');
+                
+                if (castState !== cast.framework.CastState.NO_DEVICES_AVAILABLE) {
+                    debugLog('✅ Devices discovered!', 'success');
+                    clearInterval(discoveryTimer);
+                    onCastStateChanged({ castState: castState });
+                } else if (attempts >= maxAttempts) {
+                    debugLog('❌ Discovery timeout - no devices found', 'error');
+                    clearInterval(discoveryTimer);
+                    updateStatus('No devices found after discovery timeout', false, 'error');
+                }
+            }, 2000);
+            
+            // Also trigger immediate state check
+            setTimeout(() => {
+                const initialState = castContext.getCastState();
+                debugLog(`Initial state after discovery: ${initialState}`, 'info');
+                onCastStateChanged({ castState: initialState });
+            }, 500);
         }
 
         function requestCastSession() {
-            debugLog('Manually requesting cast session...', 'info');
+            debugLog('🔍 Manual session request...', 'info');
             
             if (!castContext) {
-                debugLog('Cast context not initialized', 'error');
+                debugLog('❌ Cast context not ready', 'error');
+                alert('Cast not initialized. Please refresh the page.');
                 return;
             }
             
-            try {
-                // This will trigger the device selector
-                castContext.requestSession().then(
-                    function() {
-                        debugLog('Session request successful', 'success');
-                    },
-                    function(error) {
-                        debugLog('Session request failed: ' + error, 'error');
-                    }
-                );
-            } catch (error) {
-                debugLog('Error requesting session: ' + error.message, 'error');
+            const currentState = castContext.getCastState();
+            debugLog(`Current state before request: ${currentState}`, 'info');
+            
+            if (currentState === cast.framework.CastState.NO_DEVICES_AVAILABLE) {
+                debugLog('❌ Force-requesting session despite no devices...', 'info');
+                // Try anyway - sometimes this helps trigger discovery
             }
+            
+            castContext.requestSession()
+                .then(() => {
+                    debugLog('✅ Session request completed', 'success');
+                })
+                .catch((error) => {
+                    if (error === 'cancel') {
+                        debugLog('👤 User cancelled selection', 'info');
+                    } else {
+                        debugLog(`❌ Session request failed: ${error}`, 'error');
+                        // Try to restart discovery
+                        debugLog('🔄 Restarting device discovery...', 'info');
+                        if (discoveryTimer) clearInterval(discoveryTimer);
+                        startDeviceDiscovery();
+                    }
+                });
         }
 
         function onSessionStateChanged(event) {
-            debugLog(`Session state changed: ${event.sessionState}`, 'info');
+            debugLog(`📱 Session State: ${event.sessionState}`, 'info');
             
             switch (event.sessionState) {
                 case cast.framework.SessionState.SESSION_STARTED:
-                    castSession = castContext.getCurrentSession();
-                    const device = castSession.getCastDevice();
-                    debugLog(`Connected to: ${device.friendlyName}`, 'success');
-                    updateStatus('Connected to ' + device.friendlyName, true, 'connected');
-                    document.getElementById('deviceInfo').textContent = 
-                        `Device: ${device.friendlyName} | Model: ${device.modelName || 'Unknown'}`;
-                    enableControls(true);
-                    break;
-                    
                 case cast.framework.SessionState.SESSION_RESUMED:
                     castSession = castContext.getCurrentSession();
-                    debugLog('Session resumed', 'success');
-                    updateStatus('Reconnected to ' + castSession.getCastDevice().friendlyName, true, 'connected');
+                    const device = castSession.getCastDevice();
+                    debugLog(`🎯 Connected: ${device.friendlyName}`, 'success');
+                    updateStatus(`Connected to ${device.friendlyName}`, true, 'connected');
+                    
+                    const deviceInfo = document.getElementById('deviceInfo');
+                    if (deviceInfo) {
+                        deviceInfo.textContent = `Device: ${device.friendlyName} | Model: ${device.modelName || 'Chromecast'}`;
+                    }
                     enableControls(true);
                     break;
                     
                 case cast.framework.SessionState.SESSION_ENDED:
-                    debugLog('Session ended', 'info');
+                    debugLog('📱 Session ended', 'info');
                     updateStatus('Disconnected from Chromecast', false, 'disconnected');
-                    document.getElementById('deviceInfo').textContent = '';
+                    const deviceInfoEl = document.getElementById('deviceInfo');
+                    if (deviceInfoEl) deviceInfoEl.textContent = '';
                     enableControls(false);
                     stopProgressTimer();
                     hideMediaInfo();
                     castSession = null;
-                    break;
                     
-                case cast.framework.SessionState.SESSION_ENDING:
-                    debugLog('Session ending...', 'info');
-                    updateStatus('Disconnecting...', false, 'disconnected');
+                    // Restart discovery after disconnect
+                    setTimeout(() => {
+                        debugLog('🔄 Restarting discovery after disconnect...', 'info');
+                        startDeviceDiscovery();
+                    }, 2000);
                     break;
-                    
-                default:
-                    debugLog(`Unknown session state: ${event.sessionState}`, 'info');
             }
         }
 
         function onCastStateChanged(event) {
-            debugLog(`Cast state changed: ${event.castState}`, 'info');
+            debugLog(`🌐 Cast State: ${event.castState}`, 'info');
             
             switch (event.castState) {
-                case cast.framework.CastState.CONNECTED:
-                    castSession = castContext.getCurrentSession();
-                    debugLog('Cast state: CONNECTED', 'success');
-                    break;
-                case cast.framework.CastState.CONNECTING:
-                    debugLog('Cast state: CONNECTING...', 'info');
-                    updateStatus('Connecting to Chromecast...', false, 'disconnected');
+                case cast.framework.CastState.NO_DEVICES_AVAILABLE:
+                    updateStatus('Searching for Chromecast devices...', false, 'disconnected');
                     break;
                 case cast.framework.CastState.NOT_CONNECTED:
-                    debugLog('Cast state: NOT_CONNECTED', 'info');
+                    updateStatus('Devices available - Click Cast to connect', false, 'disconnected');
+                    debugLog('✅ Chromecast devices are available!', 'success');
                     break;
-                case cast.framework.CastState.NO_DEVICES_AVAILABLE:
-                    debugLog('No Chromecast devices available', 'error');
-                    updateStatus('No Chromecast devices found on network', false, 'error');
+                case cast.framework.CastState.CONNECTING:
+                    updateStatus('Connecting to device...', false, 'disconnected');
+                    break;
+                case cast.framework.CastState.CONNECTED:
+                    debugLog('🎯 Cast state: CONNECTED', 'success');
                     break;
             }
         }
 
         function updateStatus(message, connected, statusClass) {
             const statusEl = document.getElementById('status');
-            statusEl.innerHTML = `<div>${connected ? '✅' : '⏳'} ${message}</div>`;
-            if (document.getElementById('deviceInfo').textContent) {
-                statusEl.appendChild(document.getElementById('deviceInfo'));
+            if (statusEl) {
+                const icon = connected ? '✅' : '⏳';
+                statusEl.innerHTML = `<div>${icon} ${message}</div>`;
+                
+                const deviceInfo = document.getElementById('deviceInfo');
+                if (deviceInfo && deviceInfo.textContent) {
+                    statusEl.appendChild(deviceInfo);
+                }
+                
+                statusEl.className = 'status ' + (statusClass || (connected ? 'connected' : 'disconnected'));
             }
-            statusEl.className = 'status ' + (statusClass || (connected ? 'connected' : 'disconnected'));
         }
 
         function enableControls(enable) {
-            document.getElementById('castBtn').disabled = !enable;
-            document.getElementById('playBtn').disabled = !enable;
-            document.getElementById('pauseBtn').disabled = !enable;
-            document.getElementById('stopBtn').disabled = !enable;
+            const buttons = ['castBtn', 'playBtn', 'pauseBtn', 'stopBtn'];
+            buttons.forEach(id => {
+                const btn = document.getElementById(id);
+                if (btn) btn.disabled = !enable;
+            });
             
-            if (enable) {
-                debugLog('Media controls enabled', 'info');
-            } else {
-                debugLog('Media controls disabled', 'info');
-            }
+            debugLog(`Media controls ${enable ? 'enabled' : 'disabled'}`, 'info');
         }
 
         function loadPreset(url) {
-            document.getElementById('videoUrl').value = url;
-            debugLog(`Preset loaded: ${url.split('/').pop()}`, 'info');
+            const input = document.getElementById('videoUrl');
+            if (input) {
+                input.value = url;
+                debugLog(`📼 Preset: ${url.split('/').pop()}`, 'info');
+            }
         }
 
         function loadMedia() {
             const videoUrl = document.getElementById('videoUrl').value.trim();
             
             if (!videoUrl) {
-                debugLog('No video URL provided', 'error');
                 alert('Please enter a video URL');
                 return;
             }
 
             if (!castSession) {
-                debugLog('No active cast session', 'error');
-                alert('No Chromecast session active');
+                alert('No active Cast session');
                 return;
             }
 
-            debugLog(`Loading media: ${videoUrl}`, 'info');
+            debugLog(`🎬 Loading: ${videoUrl}`, 'info');
 
             const mediaInfo = new chrome.cast.media.MediaInfo(videoUrl, 'video/mp4');
             mediaInfo.metadata = new chrome.cast.media.GenericMediaMetadata();
@@ -607,39 +648,37 @@
             const request = new chrome.cast.media.LoadRequest(mediaInfo);
             request.autoplay = true;
             
-            castSession.loadMedia(request).then(
-                function() {
-                    debugLog('Media loaded successfully', 'success');
+            castSession.loadMedia(request)
+                .then(() => {
+                    debugLog('✅ Media loaded successfully', 'success');
                     currentMedia = castSession.getMediaSession();
                     showMediaInfo();
                     startProgressTimer();
-                },
-                function(error) {
-                    debugLog('Failed to load media: ' + error, 'error');
-                    console.error('Error loading media', error);
+                })
+                .catch((error) => {
+                    debugLog(`❌ Media load failed: ${error}`, 'error');
                     alert('Failed to load media: ' + error);
-                }
-            );
+                });
         }
 
         function playMedia() {
             if (currentMedia) {
                 currentMedia.play(new chrome.cast.media.PlayRequest());
-                debugLog('Play command sent', 'info');
+                debugLog('▶️ Play', 'info');
             }
         }
 
         function pauseMedia() {
             if (currentMedia) {
                 currentMedia.pause(new chrome.cast.media.PauseRequest());
-                debugLog('Pause command sent', 'info');
+                debugLog('⏸️ Pause', 'info');
             }
         }
 
         function stopMedia() {
             if (currentMedia) {
                 currentMedia.stop(new chrome.cast.media.StopRequest());
-                debugLog('Stop command sent', 'info');
+                debugLog('⏹️ Stop', 'info');
                 hideMediaInfo();
                 stopProgressTimer();
             }
@@ -648,8 +687,9 @@
         function setVolume(level) {
             if (castSession) {
                 castSession.setVolume(level / 100);
-                document.getElementById('volumeValue').textContent = level;
-                debugLog(`Volume set to ${level}%`, 'info');
+                const volumeValue = document.getElementById('volumeValue');
+                if (volumeValue) volumeValue.textContent = level;
+                debugLog(`🔊 Volume: ${level}%`, 'info');
             }
         }
 
@@ -666,20 +706,24 @@
                 const request = new chrome.cast.media.SeekRequest();
                 request.currentTime = seekTime;
                 currentMedia.seek(request);
-                debugLog(`Seeking to ${formatTime(seekTime)}`, 'info');
+                debugLog(`⏭️ Seek: ${formatTime(seekTime)}`, 'info');
             }
         }
 
         function showMediaInfo() {
-            document.getElementById('mediaInfo').style.display = 'block';
-            if (currentMedia && currentMedia.media.metadata) {
-                document.getElementById('mediaTitle').textContent = 
-                    currentMedia.media.metadata.title || 'Video';
+            const mediaInfo = document.getElementById('mediaInfo');
+            if (mediaInfo) {
+                mediaInfo.style.display = 'block';
+                const titleEl = document.getElementById('mediaTitle');
+                if (titleEl && currentMedia && currentMedia.media.metadata) {
+                    titleEl.textContent = currentMedia.media.metadata.title || 'Video';
+                }
             }
         }
 
         function hideMediaInfo() {
-            document.getElementById('mediaInfo').style.display = 'none';
+            const mediaInfo = document.getElementById('mediaInfo');
+            if (mediaInfo) mediaInfo.style.display = 'none';
         }
 
         function startProgressTimer() {
@@ -702,9 +746,13 @@
             
             if (duration) {
                 const percent = (currentTime / duration) * 100;
-                document.getElementById('progress').style.width = percent + '%';
-                document.getElementById('currentTime').textContent = formatTime(currentTime);
-                document.getElementById('duration').textContent = formatTime(duration);
+                const progressEl = document.getElementById('progress');
+                const currentTimeEl = document.getElementById('currentTime');
+                const durationEl = document.getElementById('duration');
+                
+                if (progressEl) progressEl.style.width = percent + '%';
+                if (currentTimeEl) currentTimeEl.textContent = formatTime(currentTime);
+                if (durationEl) durationEl.textContent = formatTime(duration);
             }
         }
 
@@ -714,21 +762,17 @@
             return mins + ':' + (secs < 10 ? '0' : '') + secs;
         }
 
-        // Add page visibility check
+        // Page ready
         document.addEventListener('DOMContentLoaded', function() {
-            debugLog('Page loaded', 'info');
+            debugLog('📄 DOM ready', 'info');
             
-            // Check if page is served over HTTPS
             if (location.protocol !== 'https:' && location.hostname !== 'localhost') {
-                debugLog('WARNING: Page should be served over HTTPS for Chromecast to work properly', 'error');
-            }
-            
-            // Check browser
-            const isChrome = /Chrome/.test(navigator.userAgent) && /Google Inc/.test(navigator.vendor);
-            if (!isChrome) {
-                debugLog('WARNING: Non-Chrome browser detected. Cast may not work properly.', 'error');
+                debugLog('⚠️ HTTPS required for Cast', 'error');
             }
         });
     </script>
+    
+    <!-- CRITICAL: Load Cast SDK AFTER callback is defined -->
+    <script src="https://www.gstatic.com/cv/js/sender/v1/cast_sender.js?loadCastFramework=1"></script>
 </body>
 </html>
