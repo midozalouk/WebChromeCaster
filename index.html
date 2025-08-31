@@ -10,6 +10,7 @@
             padding: 0;
             box-sizing: border-box;
         }
+
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
@@ -19,87 +20,183 @@
             align-items: center;
             padding: 20px;
         }
+
         .container {
             background: rgba(255, 255, 255, 0.95);
             border-radius: 20px;
             box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
             padding: 40px;
-            max-width: 600px;
+            max-width: 700px;
             width: 100%;
         }
+
         h1 {
             color: #333;
             margin-bottom: 30px;
             text-align: center;
             font-size: 2em;
         }
-        .cast-section {
-            text-align: center;
-            margin-bottom: 30px;
-            padding: 20px;
-            background: #f8f9fa;
-            border-radius: 10px;
+
+        .instructions {
+            background: #e3f2fd;
+            border-left: 4px solid #2196f3;
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 4px;
         }
+
+        .instructions h3 {
+            color: #1976d2;
+            margin-bottom: 10px;
+        }
+
+        .instructions ol {
+            margin-left: 20px;
+            color: #555;
+        }
+
+        .instructions li {
+            margin: 5px 0;
+        }
+
+        .cast-section {
+            background: #f5f5f5;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
         .cast-button-container {
             display: inline-flex;
             align-items: center;
             gap: 15px;
-            margin-bottom: 15px;
+            padding: 10px 20px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
         }
+
         google-cast-launcher {
-            width: 30px;
-            height: 30px;
+            width: 24px;
+            height: 24px;
             cursor: pointer;
-            --connected-color: #1976d2;
-            --disconnected-color: #666;
         }
+
         .cast-label {
-            font-size: 16px;
-            color: #333;
             font-weight: 500;
+            color: #333;
         }
+
         .manual-connect {
-            margin-top: 10px;
+            margin-top: 15px;
         }
+
         .manual-connect button {
+            padding: 10px 20px;
             background: #4285f4;
             color: white;
             border: none;
-            padding: 8px 16px;
             border-radius: 6px;
             cursor: pointer;
             font-size: 14px;
         }
+
+        .manual-connect button:hover {
+            background: #357ae8;
+        }
+
         .status {
             background: #f7f9fc;
             border-radius: 10px;
             padding: 15px;
             margin-bottom: 20px;
-            text-align: center;
             font-weight: 500;
             transition: all 0.3s ease;
         }
+
         .status.connected {
             background: #d4edda;
             color: #155724;
+            border: 1px solid #c3e6cb;
         }
+
         .status.disconnected {
             background: #fff3cd;
             color: #856404;
+            border: 1px solid #ffeaa7;
         }
+
         .status.error {
             background: #f8d7da;
             color: #721c24;
+            border: 1px solid #f5c6cb;
         }
+
+        .device-info {
+            margin-top: 10px;
+            font-size: 14px;
+            color: #666;
+        }
+
+        .debug-panel {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 20px;
+            font-family: monospace;
+            font-size: 12px;
+        }
+
+        .debug-panel h4 {
+            margin-bottom: 10px;
+            color: #495057;
+        }
+
+        .debug-log {
+            background: white;
+            padding: 10px;
+            border-radius: 4px;
+            max-height: 150px;
+            overflow-y: auto;
+            line-height: 1.5;
+        }
+
+        .debug-log .log-entry {
+            margin: 2px 0;
+            padding: 2px 0;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .debug-log .log-time {
+            color: #999;
+            margin-right: 8px;
+        }
+
+        .debug-log .log-success {
+            color: #28a745;
+        }
+
+        .debug-log .log-error {
+            color: #dc3545;
+        }
+
+        .debug-log .log-info {
+            color: #17a2b8;
+        }
+
         .input-group {
             margin-bottom: 20px;
         }
+
         label {
             display: block;
             margin-bottom: 8px;
             color: #555;
             font-weight: 500;
         }
+
         input[type="url"] {
             width: 100%;
             padding: 12px;
@@ -108,16 +205,19 @@
             font-size: 16px;
             transition: border-color 0.3s ease;
         }
+
         input[type="url"]:focus {
             outline: none;
             border-color: #667eea;
         }
+
         .preset-videos {
             display: flex;
             gap: 10px;
             margin-bottom: 20px;
             flex-wrap: wrap;
         }
+
         .preset-btn {
             padding: 8px 12px;
             background: #f0f0f0;
@@ -127,16 +227,19 @@
             font-size: 14px;
             transition: all 0.3s ease;
         }
+
         .preset-btn:hover {
             background: #667eea;
             color: white;
         }
+
         .controls {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
             gap: 10px;
             margin-bottom: 20px;
         }
+
         button {
             padding: 12px 20px;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
@@ -148,29 +251,35 @@
             cursor: pointer;
             transition: transform 0.2s ease, box-shadow 0.2s ease;
         }
+
         button:hover:not(:disabled) {
             transform: translateY(-2px);
             box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
         }
+
         button:disabled {
             opacity: 0.5;
             cursor: not-allowed;
             background: #ccc;
         }
+
         .media-info {
             background: #f7f9fc;
             border-radius: 10px;
             padding: 15px;
             margin-top: 20px;
         }
+
         .media-info h3 {
             color: #333;
             margin-bottom: 10px;
             font-size: 1.2em;
         }
+
         .progress-container {
             margin: 15px 0;
         }
+
         .progress-bar {
             width: 100%;
             height: 6px;
@@ -179,12 +288,14 @@
             overflow: hidden;
             cursor: pointer;
         }
+
         .progress {
             height: 100%;
             background: linear-gradient(90deg, #667eea, #764ba2);
             border-radius: 3px;
             transition: width 0.3s ease;
         }
+
         .time-display {
             display: flex;
             justify-content: space-between;
@@ -192,22 +303,30 @@
             font-size: 14px;
             color: #666;
         }
+
         .volume-control {
             margin-top: 15px;
         }
+
         .volume-slider {
             width: 100%;
             margin-top: 10px;
         }
-        .debug-info {
-            background: #f8f9fa;
-            border: 1px solid #e9ecef;
-            border-radius: 6px;
-            padding: 10px;
-            margin-bottom: 20px;
-            font-family: monospace;
-            font-size: 12px;
-            color: #6c757d;
+
+        @keyframes pulse {
+            0% {
+                box-shadow: 0 0 0 0 rgba(66, 133, 244, 0.7);
+            }
+            70% {
+                box-shadow: 0 0 0 10px rgba(66, 133, 244, 0);
+            }
+            100% {
+                box-shadow: 0 0 0 0 rgba(66, 133, 244, 0);
+            }
+        }
+
+        .cast-button-container.highlight {
+            animation: pulse 2s infinite;
         }
     </style>
 </head>
@@ -215,24 +334,38 @@
     <div class="container">
         <h1>🎬 Chromecast Video Caster</h1>
         
+        <div class="instructions">
+            <h3>📋 How to Connect:</h3>
+            <ol>
+                <li>Make sure your Chromecast and computer are on the same WiFi network</li>
+                <li>Click the Cast button below (Chrome icon)</li>
+                <li>Select your Chromecast device from the popup menu</li>
+                <li>Once connected, load and control videos</li>
+            </ol>
+        </div>
+
         <div class="cast-section">
-            <div class="cast-button-container">
+            <div class="cast-button-container" id="castButtonContainer">
                 <google-cast-launcher id="castbutton"></google-cast-launcher>
-                <span class="cast-label">Cast to Device</span>
+                <span class="cast-label">Click to show Chromecast devices</span>
             </div>
             <div class="manual-connect">
-                <button onclick="manualRequestSession()">🔍 Search for Devices</button>
+                <button onclick="requestCastSession()">🔍 Manually Search for Devices</button>
             </div>
         </div>
 
         <div class="status disconnected" id="status">
-            Initializing Cast API...
+            <div>⏳ Waiting for Chromecast connection...</div>
+            <div class="device-info" id="deviceInfo"></div>
         </div>
 
-        <div class="debug-info" id="debugInfo">
-            Cast Status: Loading...
+        <div class="debug-panel">
+            <h4>🔧 Debug Log:</h4>
+            <div class="debug-log" id="debugLog">
+                <div class="log-entry"><span class="log-time">[00:00]</span> Initializing Cast API...</div>
+            </div>
         </div>
-        
+
         <div class="input-group">
             <label for="videoUrl">Video URL:</label>
             <input type="url" id="videoUrl" placeholder="Enter video URL (MP4, WebM, etc.)" 
@@ -243,6 +376,7 @@
             <button class="preset-btn" onclick="loadPreset('https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4')">Big Buck Bunny</button>
             <button class="preset-btn" onclick="loadPreset('https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4')">Elephants Dream</button>
             <button class="preset-btn" onclick="loadPreset('https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/Sintel.mp4')">Sintel</button>
+            <button class="preset-btn" onclick="loadPreset('https://test-videos.co.uk/vids/bigbuckbunny/mp4/h264/720/Big_Buck_Bunny_720_10s_1MB.mp4')">Test Video (10s)</button>
         </div>
 
         <div class="controls">
@@ -274,195 +408,236 @@
         </div>
     </div>
 
-    <script src="https://www.gstatic.com/cv/js/sender/v1/cast_sender.js?loadCastFramework=1"></script>
-    
     <script>
-        let castContext, castSession, currentMedia, progressTimer;
-        let isInitialized = false;
+        let castContext, castSession, currentMedia;
+        let progressTimer;
+        let isApiReady = false;
 
-        // Debug function
-        function updateDebugInfo(message) {
-            const debugEl = document.getElementById('debugInfo');
-            const timestamp = new Date().toLocaleTimeString();
-            debugEl.textContent = `[${timestamp}] ${message}`;
-            console.log(`Cast Debug: ${message}`);
+        // Debug logging function - RESTORED
+        function debugLog(message, type = 'info') {
+            const logEl = document.getElementById('debugLog');
+            if (logEl) {
+                const time = new Date().toLocaleTimeString();
+                const entry = document.createElement('div');
+                entry.className = 'log-entry';
+                entry.innerHTML = `<span class="log-time">[${time}]</span> <span class="log-${type}">${message}</span>`;
+                logEl.appendChild(entry);
+                logEl.scrollTop = logEl.scrollHeight;
+            }
+            console.log(`[Cast Debug] ${message}`);
         }
 
-        // Cast API availability callback - this is critical!
+        // CRITICAL: This callback MUST be defined BEFORE loading the Cast script
         window['__onGCastApiAvailable'] = function(isAvailable) {
-            updateDebugInfo(`Cast API Available: ${isAvailable}`);
-            
             if (isAvailable) {
-                // Wait for DOM to be fully ready
+                debugLog('✅ Cast API loaded successfully', 'success');
+                isApiReady = true;
+                // Wait a bit for DOM to be ready if it isn't already
                 if (document.readyState === 'loading') {
-                    document.addEventListener('DOMContentLoaded', initializeCastApi);
+                    document.addEventListener('DOMContentLoaded', () => {
+                        setTimeout(initializeCastApi, 200);
+                    });
                 } else {
-                    // DOM already loaded, initialize immediately
-                    setTimeout(initializeCastApi, 500); // Small delay to ensure everything is ready
+                    setTimeout(initializeCastApi, 200);
                 }
             } else {
-                updateStatus('Cast API not available - Use Chrome browser', false, 'error');
-                updateDebugInfo('ERROR: Cast API not available');
+                debugLog('❌ Cast API not available - Use Chrome browser', 'error');
+                updateStatus('Cast API not available - Please use Chrome browser', false, 'error');
             }
         };
 
         function initializeCastApi() {
-            if (isInitialized) {
-                updateDebugInfo('Already initialized, skipping...');
-                return;
-            }
-
             try {
-                updateDebugInfo('Starting Cast initialization...');
+                debugLog('🔧 Configuring Cast context...', 'info');
                 
-                // Get Cast context
+                // Get the Cast context and set options
                 castContext = cast.framework.CastContext.getInstance();
                 
-                // Set options
-                const options = {
+                const castOptions = {
                     receiverApplicationId: chrome.cast.media.DEFAULT_MEDIA_RECEIVER_APP_ID,
-                    autoJoinPolicy: chrome.cast.AutoJoinPolicy.ORIGIN_SCOPED
+                    autoJoinPolicy: chrome.cast.AutoJoinPolicy.ORIGIN_SCOPED,
+                    language: 'en-US',
+                    resumeSavedSession: true
                 };
                 
-                castContext.setOptions(options);
-                updateDebugInfo('Cast options set');
+                castContext.setOptions(castOptions);
                 
-                // Add event listeners
+                // Set up event listeners
                 castContext.addEventListener(
                     cast.framework.CastContextEventType.SESSION_STATE_CHANGED,
                     onSessionStateChanged
                 );
 
                 castContext.addEventListener(
-                    cast.framework.CastContextEventType.CAST_STATE_CHANGED, 
+                    cast.framework.CastContextEventType.CAST_STATE_CHANGED,
                     onCastStateChanged
                 );
                 
-                updateDebugInfo('Event listeners added');
+                debugLog('✅ Cast framework initialized', 'success');
                 
                 // Check initial state
                 const initialState = castContext.getCastState();
-                updateDebugInfo(`Initial Cast State: ${initialState}`);
+                debugLog(`📡 Initial cast state: ${initialState}`, 'info');
+                
+                // Handle initial state
                 onCastStateChanged({ castState: initialState });
                 
-                isInitialized = true;
-                updateDebugInfo('✅ Cast API initialized successfully!');
-                updateStatus('Ready to cast - Click the Cast button above', false, 'disconnected');
+                // Ready indicator
+                debugLog('🚀 Ready to cast! Click the Cast button above.', 'success');
+                const castContainer = document.getElementById('castButtonContainer');
+                if (castContainer) {
+                    castContainer.classList.add('highlight');
+                    setTimeout(() => {
+                        castContainer.classList.remove('highlight');
+                    }, 3000);
+                }
                 
             } catch (error) {
-                updateDebugInfo(`❌ Initialization failed: ${error.message}`);
-                updateStatus('Cast initialization failed', false, 'error');
-                console.error('Cast init error:', error);
+                debugLog('❌ Failed to initialize Cast: ' + error.message, 'error');
+                console.error('Cast initialization error:', error);
+                updateStatus('Cast initialization failed: ' + error.message, false, 'error');
             }
         }
 
-        function manualRequestSession() {
-            updateDebugInfo('Manual session request triggered');
+        // Manual search function - RESTORED
+        function requestCastSession() {
+            debugLog('🔍 Opening device selector...', 'info');
             
             if (!castContext) {
-                updateDebugInfo('❌ Cast context not available');
-                alert('Cast not initialized. Please refresh the page.');
+                debugLog('❌ Cast context not ready', 'error');
+                alert('Cast API not initialized. Please refresh the page.');
                 return;
             }
-
-            updateDebugInfo('Requesting cast session...');
+            
+            const castState = castContext.getCastState();
+            debugLog(`📡 Current state: ${castState}`, 'info');
+            
+            if (castState === cast.framework.CastState.NO_DEVICES_AVAILABLE) {
+                debugLog('❌ No devices available', 'error');
+                alert('No Chromecast devices found on network. Make sure your Chromecast is on and connected to the same WiFi network.');
+                return;
+            }
             
             castContext.requestSession()
                 .then(() => {
-                    updateDebugInfo('✅ Session request successful');
+                    debugLog('✅ Device selection successful', 'success');
                 })
                 .catch((error) => {
                     if (error === 'cancel') {
-                        updateDebugInfo('User cancelled device selection');
+                        debugLog('👤 User cancelled device selection', 'info');
                     } else {
-                        updateDebugInfo(`❌ Session request failed: ${error}`);
+                        debugLog('❌ Session request failed: ' + error, 'error');
+                        alert('Failed to connect: ' + error);
                     }
                 });
         }
 
         function onSessionStateChanged(event) {
-            updateDebugInfo(`Session State: ${event.sessionState}`);
+            debugLog(`📱 Session state: ${event.sessionState}`, 'info');
             
             switch (event.sessionState) {
                 case cast.framework.SessionState.SESSION_STARTED:
                 case cast.framework.SessionState.SESSION_RESUMED:
                     castSession = castContext.getCurrentSession();
                     const device = castSession.getCastDevice();
+                    debugLog(`🎯 Connected to: ${device.friendlyName}`, 'success');
                     updateStatus(`Connected to ${device.friendlyName}`, true, 'connected');
-                    updateDebugInfo(`✅ Connected to: ${device.friendlyName}`);
+                    const deviceInfo = document.getElementById('deviceInfo');
+                    if (deviceInfo) {
+                        deviceInfo.textContent = `Device: ${device.friendlyName} | Model: ${device.modelName || 'Chromecast'}`;
+                    }
                     enableControls(true);
                     break;
                     
                 case cast.framework.SessionState.SESSION_ENDED:
-                    updateDebugInfo('Session ended');
+                    debugLog('📱 Session ended', 'info');
                     updateStatus('Disconnected from Chromecast', false, 'disconnected');
+                    const deviceInfoEl = document.getElementById('deviceInfo');
+                    if (deviceInfoEl) deviceInfoEl.textContent = '';
                     enableControls(false);
                     stopProgressTimer();
                     hideMediaInfo();
                     castSession = null;
                     break;
-                    
+
                 case cast.framework.SessionState.SESSION_ENDING:
-                    updateDebugInfo('Session ending...');
+                    debugLog('📱 Session ending...', 'info');
                     updateStatus('Disconnecting...', false, 'disconnected');
                     break;
             }
         }
 
         function onCastStateChanged(event) {
-            updateDebugInfo(`Cast State Changed: ${event.castState}`);
+            const state = event.castState;
+            debugLog(`🌐 Cast state changed: ${state}`, 'info');
             
-            switch (event.castState) {
+            switch (state) {
                 case cast.framework.CastState.NO_DEVICES_AVAILABLE:
-                    updateStatus('No Chromecast devices found', false, 'error');
-                    updateDebugInfo('❌ No devices available on network');
+                    debugLog('📡 No Chromecast devices found on network', 'error');
+                    updateStatus('No Chromecast devices available - Check network connection', false, 'error');
                     break;
                 case cast.framework.CastState.NOT_CONNECTED:
-                    updateStatus('Ready to connect', false, 'disconnected');
-                    updateDebugInfo('Ready to connect to devices');
+                    updateStatus('Ready to connect - Click Cast button', false, 'disconnected');
                     break;
                 case cast.framework.CastState.CONNECTING:
-                    updateStatus('Connecting to device...', false, 'disconnected');
-                    updateDebugInfo('Connecting to Cast device...');
+                    updateStatus('Connecting to Chromecast...', false, 'disconnected');
                     break;
                 case cast.framework.CastState.CONNECTED:
-                    updateDebugInfo('Cast state: CONNECTED');
+                    // Session state handler will update this
                     break;
             }
         }
 
         function updateStatus(message, connected, statusClass) {
             const statusEl = document.getElementById('status');
-            statusEl.textContent = message;
-            statusEl.className = 'status ' + (statusClass || (connected ? 'connected' : 'disconnected'));
+            if (statusEl) {
+                statusEl.innerHTML = `<div>${connected ? '✅' : '⏳'} ${message}</div>`;
+                const deviceInfo = document.getElementById('deviceInfo');
+                if (deviceInfo && deviceInfo.textContent) {
+                    statusEl.appendChild(deviceInfo);
+                }
+                statusEl.className = 'status ' + (statusClass || (connected ? 'connected' : 'disconnected'));
+            }
         }
 
         function enableControls(enable) {
-            document.getElementById('castBtn').disabled = !enable;
-            document.getElementById('playBtn').disabled = !enable;
-            document.getElementById('pauseBtn').disabled = !enable;
-            document.getElementById('stopBtn').disabled = !enable;
+            const buttons = ['castBtn', 'playBtn', 'pauseBtn', 'stopBtn'];
+            buttons.forEach(id => {
+                const btn = document.getElementById(id);
+                if (btn) btn.disabled = !enable;
+            });
+            
+            if (enable) {
+                debugLog('Media controls enabled', 'info');
+            } else {
+                debugLog('Media controls disabled', 'info');
+            }
         }
 
         function loadPreset(url) {
-            document.getElementById('videoUrl').value = url;
-            updateDebugInfo(`Preset loaded: ${url.split('/').pop()}`);
+            const input = document.getElementById('videoUrl');
+            if (input) {
+                input.value = url;
+                debugLog(`📼 Preset loaded: ${url.split('/').pop()}`, 'info');
+            }
         }
 
         function loadMedia() {
             const videoUrl = document.getElementById('videoUrl').value.trim();
             
             if (!videoUrl) {
+                debugLog('No video URL provided', 'error');
                 alert('Please enter a video URL');
                 return;
             }
 
             if (!castSession) {
-                alert('No active Cast session');
+                debugLog('No active cast session', 'error');
+                alert('No Chromecast session active');
                 return;
             }
 
-            updateDebugInfo(`Loading media: ${videoUrl}`);
+            debugLog(`🎬 Loading: ${videoUrl}`, 'info');
 
             const mediaInfo = new chrome.cast.media.MediaInfo(videoUrl, 'video/mp4');
             mediaInfo.metadata = new chrome.cast.media.GenericMediaMetadata();
@@ -474,13 +649,13 @@
             
             castSession.loadMedia(request)
                 .then(() => {
-                    updateDebugInfo('✅ Media loaded successfully');
+                    debugLog('✅ Media loaded successfully', 'success');
                     currentMedia = castSession.getMediaSession();
                     showMediaInfo();
                     startProgressTimer();
                 })
                 .catch((error) => {
-                    updateDebugInfo(`❌ Media load failed: ${error}`);
+                    debugLog('❌ Failed to load media: ' + error, 'error');
                     alert('Failed to load media: ' + error);
                 });
         }
@@ -488,21 +663,21 @@
         function playMedia() {
             if (currentMedia) {
                 currentMedia.play(new chrome.cast.media.PlayRequest());
-                updateDebugInfo('▶️ Play command sent');
+                debugLog('▶️ Play command sent', 'info');
             }
         }
 
         function pauseMedia() {
             if (currentMedia) {
                 currentMedia.pause(new chrome.cast.media.PauseRequest());
-                updateDebugInfo('⏸️ Pause command sent');
+                debugLog('⏸️ Pause command sent', 'info');
             }
         }
 
         function stopMedia() {
             if (currentMedia) {
                 currentMedia.stop(new chrome.cast.media.StopRequest());
-                updateDebugInfo('⏹️ Stop command sent');
+                debugLog('⏹️ Stop command sent', 'info');
                 hideMediaInfo();
                 stopProgressTimer();
             }
@@ -511,8 +686,9 @@
         function setVolume(level) {
             if (castSession) {
                 castSession.setVolume(level / 100);
-                document.getElementById('volumeValue').textContent = level;
-                updateDebugInfo(`🔊 Volume set to ${level}%`);
+                const volumeValue = document.getElementById('volumeValue');
+                if (volumeValue) volumeValue.textContent = level;
+                debugLog(`🔊 Volume: ${level}%`, 'info');
             }
         }
 
@@ -529,20 +705,24 @@
                 const request = new chrome.cast.media.SeekRequest();
                 request.currentTime = seekTime;
                 currentMedia.seek(request);
-                updateDebugInfo(`⏭️ Seeking to ${formatTime(seekTime)}`);
+                debugLog(`⏭️ Seeking to ${formatTime(seekTime)}`, 'info');
             }
         }
 
         function showMediaInfo() {
-            document.getElementById('mediaInfo').style.display = 'block';
-            if (currentMedia && currentMedia.media.metadata) {
-                document.getElementById('mediaTitle').textContent = 
-                    currentMedia.media.metadata.title || 'Video';
+            const mediaInfo = document.getElementById('mediaInfo');
+            if (mediaInfo) {
+                mediaInfo.style.display = 'block';
+                const titleEl = document.getElementById('mediaTitle');
+                if (titleEl && currentMedia && currentMedia.media.metadata) {
+                    titleEl.textContent = currentMedia.media.metadata.title || 'Video';
+                }
             }
         }
 
         function hideMediaInfo() {
-            document.getElementById('mediaInfo').style.display = 'none';
+            const mediaInfo = document.getElementById('mediaInfo');
+            if (mediaInfo) mediaInfo.style.display = 'none';
         }
 
         function startProgressTimer() {
@@ -565,9 +745,13 @@
             
             if (duration) {
                 const percent = (currentTime / duration) * 100;
-                document.getElementById('progress').style.width = percent + '%';
-                document.getElementById('currentTime').textContent = formatTime(currentTime);
-                document.getElementById('duration').textContent = formatTime(duration);
+                const progressEl = document.getElementById('progress');
+                const currentTimeEl = document.getElementById('currentTime');
+                const durationEl = document.getElementById('duration');
+                
+                if (progressEl) progressEl.style.width = percent + '%';
+                if (currentTimeEl) currentTimeEl.textContent = formatTime(currentTime);
+                if (durationEl) durationEl.textContent = formatTime(duration);
             }
         }
 
@@ -579,8 +763,20 @@
 
         // Page ready check
         document.addEventListener('DOMContentLoaded', function() {
-            updateDebugInfo('DOM Content Loaded');
+            debugLog('📄 Page ready', 'info');
+            
+            if (location.protocol !== 'https:' && location.hostname !== 'localhost') {
+                debugLog('⚠️ HTTPS required for Chromecast', 'error');
+            }
+            
+            // Check if API is already ready (in case callback fired before DOM ready)
+            if (isApiReady && !castContext) {
+                setTimeout(initializeCastApi, 300);
+            }
         });
     </script>
+    
+    <!-- Load Cast SDK AFTER defining the callback -->
+    <script src="https://www.gstatic.com/cv/js/sender/v1/cast_sender.js?loadCastFramework=1"></script>
 </body>
 </html>
