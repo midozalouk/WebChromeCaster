@@ -1,53 +1,57 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <title>Simple Chromecast Sender</title>
-    <script type="text/javascript" src="https://www.gstatic.com/cv/js/sender/v1/cast_sender.js?loadCastFramework=1"></script>
-    <script type="text/javascript">
-        window['__onGCastApiAvailable'] = function(isAvailable) {
-            if (isAvailable) {
-                cast.framework.CastContext.getInstance().setOptions({
-                    receiverApplicationId: chrome.cast.ReceiverApp.DEFAULT_MEDIA_RECEIVER, // Use your custom app ID if needed
-                    autoJoinPolicy: chrome.cast.AutoJoinPolicy.ORIGIN_SCOPED
-                });
-            }
-        };
-
-        function castVideo() {
-            const url = document.getElementById('urlInput').value;
-            if (!url) {
-                alert('Please enter a video URL');
-                return;
-            }
-
-            const castSession = cast.framework.CastContext.getInstance().getCurrentSession();
-            if (!castSession) {
-                alert('No Chromecast device connected. Use the Cast button to connect first.');
-                return;
-            }
-
-            const mediaInfo = new chrome.cast.media.MediaInfo(url, 'video/mp4');
-            mediaInfo.metadata = new chrome.cast.media.GenericMediaMetadata();
-            mediaInfo.metadata.title = 'Casting Video';
-
-            const request = new chrome.cast.media.LoadRequest(mediaInfo);
-            castSession.loadMedia(request)
-                .then(() => console.log('Video casting started successfully'))
-                .catch(error => console.error('Error casting video: ' + error));
-        }
-    </script>
+  <title>Simple Chromecast Caster</title>
+  <meta charset="utf-8">
+  <script type="text/javascript" 
+    src="https://www.gstatic.com/cv/js/sender/v1/cast_sender.js?loadCastFramework=1">
+  </script>
+  <style>
+    body { font-family: Arial, sans-serif; padding: 20px; }
+    #urlInput { width: 300px; }
+  </style>
 </head>
 <body>
-    <h1>Chromecast Video Sender</h1>
-    
-    <!-- 1st button: Shows available Chromecast devices and connects -->
-    <google-cast-launcher></google-cast-launcher>
-    
-    <!-- 2nd: Input bar for video URL -->
-    <input type="text" id="urlInput" placeholder="Enter video URL (e.g., https://example.com/video.mp4)" style="width: 300px; margin: 10px;">
-    
-    <!-- 3rd: Button to cast the video -->
-    <button onclick="castVideo()">Cast</button>
+  <h2>Chromecast Test</h2>
+  
+  <!-- Official Cast button -->
+  <google-cast-launcher id="castbutton"></google-cast-launcher>
+  
+  <br><br>
+  <input id="urlInput" type="text" placeholder="Enter video URL">
+  <button id="playBtn">Cast URL</button>
+
+  <script>
+    window['__onGCastApiAvailable'] = function(isAvailable) {
+      if (isAvailable) {
+        const context = cast.framework.CastContext.getInstance();
+        context.setOptions({
+          receiverApplicationId: chrome.cast.media.DEFAULT_MEDIA_RECEIVER_APP_ID,
+          autoJoinPolicy: chrome.cast.AutoJoinPolicy.ORIGIN_SCOPED
+        });
+      }
+    };
+
+    document.getElementById("playBtn").addEventListener("click", async () => {
+      const session = cast.framework.CastContext.getInstance().getCurrentSession();
+      if (!session) {
+        alert("Please connect to a Chromecast device first using the cast button.");
+        return;
+      }
+      const url = document.getElementById("urlInput").value;
+      if (!url) {
+        alert("Please enter a URL to cast.");
+        return;
+      }
+
+      const mediaInfo = new chrome.cast.media.MediaInfo(url, "video/mp4");
+      const request = new chrome.cast.media.LoadRequest(mediaInfo);
+
+      session.loadMedia(request).then(
+        () => console.log("Media loaded successfully"),
+        (err) => console.error("Failed to load media", err)
+      );
+    });
+  </script>
 </body>
 </html>
